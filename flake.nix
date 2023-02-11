@@ -1,5 +1,5 @@
 {
-  description = "";
+  description = "Mono repo of DavHau";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
