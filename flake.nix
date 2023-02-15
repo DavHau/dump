@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nixpkgsPython.url = "github:davhau/nixpkgs/davhau-fetchPythonRequirements";
+    nixpkgsStable.url = "nixpkgs/nixos-22.11";
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
