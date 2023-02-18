@@ -9,7 +9,7 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    drv-parts.url = "github:DavHau/drv-parts";
+    drv-parts.url = "github:DavHau/drv-parts/package";
     drv-parts.inputs.nixpkgs.follows = "nixpkgs";
     drv-parts.inputs.flake-parts.follows = "flake-parts";
   };
