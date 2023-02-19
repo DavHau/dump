@@ -11,11 +11,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1676734140,
-        "narHash": "sha256-PXYYBFkQJjp1neiqSxI5ci5dIvpAxkwG302u+i4KQ4s=",
+        "lastModified": 1676784412,
+        "narHash": "sha256-ZsJcmaQMsWJFUyCwHNj/HZUrVZjJY8NIY8rgDsreC98=",
         "owner": "DavHau",
         "repo": "drv-parts",
-        "rev": "286136be53058a2af77c8175705b5240c6d187fe",
+        "rev": "656034998d35dd02ae8bdcce87fb476addd39448",
         "type": "github"
       },
       "original": {
