@@ -13,25 +13,27 @@ a complete set of python packages in the right version
 - resolved & fetched by `pip download`, `mach-nix` or other tools.
 
 That means that version specifiers as in (PEP 440; https://peps.python.org/pep-0508/)
-and extras specified in markers (PEP 508; https://peps.python.org/pep-0508/ ) can be
-ignored for now.
+and extras specified in markers (PEP 508; https://peps.python.org/pep-0508/)
+ can be ignored for now.
 
 We rely on `pkginfo` (https://pythonhosted.org/pkginfo/) to read `Requires-Dist`
 et al as specified in https://packaging.python.org/en/latest/specifications/core-metadata/#id23
 And we use `packaging` (https://packaging.pypa.io/en/stable/index.html) to parse
 dependency declarations.
 
+The output is a list of tuples. First element in each tuple is the package name,
+second a list of dependencies. Output is sorted by the number of dependencies,
+so that leafs of the dependency tree come first, the package to install last.
 '''
 
 import sys
 import tarfile
 import json
 from pathlib import Path
-from collections import OrderedDict
 
 from pkginfo import SDist, Wheel
 from packaging.requirements import Requirement
-from packaging.utils import parse_sdist_filename
+from packaging.utils import parse_sdist_filename, canonicalize_name
 
 
 def _is_source_dist(pkg_file):
@@ -87,9 +89,12 @@ if __name__ == '__main__':
     if not (pkgs_path.exists and pkgs_path.is_dir()):
         usage()
 
-    dependencies = OrderedDict()
+    dependencies = []
     for pkg_file in pkgs_path.iterdir():
         info = get_pkg_info(pkg_file)
-        name = info.name.lower()
-        dependencies[name] = [req.name.lower() for req in get_requirements(pkg_file)]
+        if not info:
+            continue
+        name = canonicalize_name(info.name)
+        dependencies.append((name, [canonicalize_name(req.name) for req in get_requirements(pkg_file)]))
+    dependencies = sorted(dependencies, key=lambda d: len(d[1]))
     print(json.dumps(dependencies, indent=2))
