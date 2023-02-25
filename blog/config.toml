@@ -1,0 +1,59 @@
+baseURL = ''
+languageCode = 'en-us'
+title = 'DavHau - David Hauer'
+
+# wrapped hugo hardcodes the theme from the flake input `hugo-theme` as `theme`
+theme = "theme"
+# uglyurls = true
+# relativeURLs = true
+
+[markup]
+  [markup.highlight]
+    style = 'monokai'
+
+[params]
+  author = "David Hauer"
+  info = """
+    Reproducible Infrastructure and Packaging
+    Nix & NixOS Magician
+  """
+  description = "David Hauer's personal website"
+  keywords = "blog,developer,personal"
+  avatarurl = "https://numtide.com/_next/image?url=https%3A%2F%2Fsuper-static-assets.s3.amazonaws.com%2F03b75a0f-85b1-47cc-9a26-0905f2aab11c%2Fimages%2F18c50621-29af-4e19-b5a2-592b1bfd02ea.jpg&w=1920&q=80"
+
+  favicon_32 = "/img/favicon-32x32.png"
+  favicon_16 = "/img/favicon-16x16.png"
+
+  since = 1993
+
+  enableTwemoji = true
+
+  colorScheme = "auto"
+  hidecolorschemetoggle = false
+
+  # customCSS = ["css/custom.css"]
+  # customSCSS = ["scss/custom.scss"]
+  # customJS = ["js/custom.js"]
+
+[taxonomies]
+  category = "categories"
+  series = "series"
+  tag = "tags"
+  author = "authors"
+
+# Social links
+[[params.social]]
+  name = "Github"
+  icon = "fa fa-github fa-2x"
+  weight = 1
+  url = "https://github.com/DavHau/"
+
+# Menu links
+#[[menu.main]]
+#  name = "Blog"
+#  weight = 1
+#  url  = "posts/"
+[[menu.main]]
+  name = "Projects"
+  weight = 1
+  url  = "projects/"

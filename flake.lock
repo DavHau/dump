@@ -73,6 +73,22 @@
         "type": "indirect"
       }
     },
+    "hugo-theme": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1675813487,
+        "narHash": "sha256-v0t7DVCml7pv7gU0IDy/xr61d/ohfC1xwzXYsVUoC+g=",
+        "owner": "luizdepra",
+        "repo": "hugo-coder",
+        "rev": "5c2476be1c29563b6dd06c15fb9206d2ca50efae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "luizdepra",
+        "repo": "hugo-coder",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1676481215,
@@ -142,6 +158,7 @@
         "drv-parts": "drv-parts",
         "flake-compat": "flake-compat_2",
         "flake-parts": "flake-parts",
+        "hugo-theme": "hugo-theme",
         "nixpkgs": "nixpkgs",
         "nixpkgsPython": "nixpkgsPython",
         "nixpkgsStable": "nixpkgsStable"
