@@ -33,8 +33,34 @@
       ];
     };
 
+    website = pkgs.runCommand "website" {} ''
+      cp -r ${self}/blog/* .
+      chmod -R +w .
+      ${hugoPkg}/bin/hugo
+      mv public $out
+    '';
+
+    deploy.type = "app";
+    deploy.program = toString (config.writers.writePureShellScript
+      (with pkgs; [
+        coreutils
+        gitMinimal
+        rsync
+      ])
+      ''
+        set -x
+        git checkout gh-pages
+        rsync -r ${website}/ .
+        chmod +w -R .
+        git add .
+        git commit -m "deploy blog - $(date --rfc-3339=seconds)"
+        git push
+      ''
+    );
+
   in {
     packages.blog = blog;
     devShells.blog = shell;
+    apps.deploy-blog = deploy;
   };
 }
