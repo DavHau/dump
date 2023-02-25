@@ -46,15 +46,18 @@
         coreutils
         gitMinimal
         rsync
+        openssh
       ])
       ''
         set -x
+        branchOrig=$(git branch --show-current)
         git checkout gh-pages
         rsync -r ${website}/ .
         chmod +w -R .
         git add .
-        git commit -m "deploy blog - $(date --rfc-3339=seconds)"
+        git commit -m "deploy blog - $(date --rfc-3339=seconds)" || :
         git push
+        git checkout "$branchOrig"
       ''
     );
 
