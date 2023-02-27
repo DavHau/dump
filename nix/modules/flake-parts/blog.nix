@@ -14,15 +14,12 @@
       '';
 
     hugo = "${hugoPkg}/bin/hugo";
-    theme = inputs.hugo-theme;
 
     blog = pkgs.runCommandNoCC "blog" {} ''
       mkdir $out
       cd $out
       cp -r ${self + /blog}/* .
       chmod +w -R .
-      mkdir ./themes
-      cp -r ${theme} ./themes/theme
 
       ${hugo}
     '';
