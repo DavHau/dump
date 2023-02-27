@@ -122,22 +122,6 @@
         "type": "github"
       }
     },
-    "nixpkgsPython": {
-      "locked": {
-        "lastModified": 1676610873,
-        "narHash": "sha256-fx76fAVRsll0igZUWpo+S104Sfq0PcOOm+6WlftYOCM=",
-        "owner": "davhau",
-        "repo": "nixpkgs",
-        "rev": "aacf7f1c0ddb12c8374fe4334d71dfb21c958380",
-        "type": "github"
-      },
-      "original": {
-        "owner": "davhau",
-        "ref": "davhau-fetchPythonRequirements",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgsStable": {
       "locked": {
         "lastModified": 1676375384,
@@ -160,7 +144,6 @@
         "flake-parts": "flake-parts",
         "hugo-theme": "hugo-theme",
         "nixpkgs": "nixpkgs",
-        "nixpkgsPython": "nixpkgsPython",
         "nixpkgsStable": "nixpkgsStable"
       }
     }
