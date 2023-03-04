@@ -11,12 +11,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1677513457,
-        "narHash": "sha256-xMdFUARa3X4x4nOoe+A/08W7BTrlPIe/qbSMLHaa7KU=",
-        "owner": "DavHau",
-        "repo": "drv-parts",
-        "rev": "7b4a7611008a3b6b3b68bedafe447ddf08347f9f",
-        "type": "github"
+        "lastModified": 1677562209,
+        "narHash": "sha256-tXEdfsNPeroRA50Qs43BUl6Aa5mLCxbw/CnAeY0Zhiw=",
+        "type": "git",
+        "url": "file:///home/grmpf/projects/github/drv-parts"
       },
       "original": {
         "owner": "DavHau",
