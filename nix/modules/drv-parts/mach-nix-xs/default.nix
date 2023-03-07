@@ -16,7 +16,7 @@
   wheel-info = l.filterAttrs (name: ver: ver == "wheel") all-info;
   sdist-info = l.filterAttrs (name: ver: ! wheel-info ? ${name}) all-info;
 
-  # get the paths of all downlosded wheels
+  # get the paths of all downloaded wheels
   wheel-dists-paths =
     l.mapAttrs (name: ver: getFetchedDistPath name) wheel-info;
 
@@ -25,27 +25,27 @@
   # package.
   sdists-to-build =
     l.filterAttrs (name: ver: (! substitutions ? ${name}) && name != packageName) sdist-info;
-  new-dists = l.flip l.mapAttrs sdists-to-build
+  built-wheels = l.flip l.mapAttrs sdists-to-build
     (name: ver: mkWheelDist name ver (getFetchedDistPath name));
-  all-dists = new-dists // substitutions;
+  all-built-wheels = built-wheels // substitutions;
 
   # patch all-dists to ensure build inputs are propagated for autopPatchelflHook
-  all-dists-compat-patchelf = l.flip l.mapAttrs all-dists (name: dist:
+  all-wheels-compat-patchelf = l.flip l.mapAttrs all-built-wheels (name: dist:
     dist.overridePythonAttrs (old: {postFixup = "ln -s $out $dist/out";})
   );
 
   # Convert all-dists to drv-parts drvs.
   # The conversion is done via config.drvs (see below).
-  drv-parts-dists = l.flip l.mapAttrs config.mach-nix.drvs
+  overridden-built-wheels = l.flip l.mapAttrs config.mach-nix.drvs
     (_: drv: drv.public);
 
   # The final dists we want to install.
   # A mix of:
-  #   - donwloaded wheels
+  #   - downloaded wheels
   #   - downloaded sdists built into wheels (see above)
   #   - substitutions from nixpkgs patched for compat with autoPatchelfHook
   finalDistsPaths =
-    wheel-dists-paths // (l.mapAttrs getDistDir drv-parts-dists);
+    wheel-dists-paths // (l.mapAttrs getDistDir overridden-built-wheels);
 
   packageName = config.public.name;
 
@@ -121,31 +121,47 @@
     else getVersion file;
 
   # build a wheel for a given sdist
-  mkWheelDist = pname: version: distDir: python.pkgs.buildPythonPackage (
+  mkWheelDist = pname: version: distDir: let
     # re-use package attrs from nixpkgs
     # (treat nixpkgs as a source of community overrides)
-    (l.optionalAttrs (python.pkgs ? ${pname})
-        extractPythonAttrs python.pkgs.${pname})
+    extractedAttrs = l.optionalAttrs (python.pkgs ? ${pname})
+      extractPythonAttrs python.pkgs.${pname};
+  in
+    python.pkgs.buildPythonPackage (
+      # nixpkgs attrs
+      extractedAttrs
 
-    # package attributes
-    // {
-      inherit pname;
-      inherit version;
-      format = "setuptools";
-      # distDir will contain a single file which is the src
-      preUnpack = ''export src="${distDir}"/*'';
-      # install manualSetupDeps
-      pipInstallFlags =
-        map (distDir: "--find-links ${distDir}") manualSetupDeps.${pname} or [];
-    }
+      # package attributes
+      // {
+        inherit pname;
+        inherit version;
+        format = "setuptools";
+        # distDir will contain a single file which is the src
+        preUnpack = ''export src="${distDir}"/*'';
+        # install manualSetupDeps
+        pipInstallFlags = l.trace dependencyTree.${pname}
+          (map (distDir: "--find-links ${distDir}") manualSetupDeps.${pname} or [])
+          ++ (map (dep: "--find-links ${dep.name}") dependencyTree.${pname} or []);
+        nativeBuildInputs =
+          extractedAttrs.nativeBuildInputs or []
+          ++ [config.deps.autoPatchelfHook];
+      }
 
-    # If setup deps have been specified manually, we need to remove the
-    #   propagatedBuildInputs from nixpkgs to prevent collisions.
-    // lib.optionalAttrs (manualSetupDeps ? ${pname}) {
-      propagatedBuildInputs = [];
-    }
-  );
+      # If setup deps have been specified manually, we need to remove the
+      #   propagatedBuildInputs from nixpkgs to prevent collisions.
+      // lib.optionalAttrs (manualSetupDeps ? ${pname}) {
+        propagatedBuildInputs = [];
+      }
+    );
 
+  # TODO don't depend on config.deps.python for this, because the script should
+  # also be able to run for packages using ancient python, without "packaging".
+  packagingPython = config.deps.python.withPackages(p: [p.pkginfo p.packaging]);
+  dependenciesFile = "${cfg.pythonSources}/dependencies.json";
+  dependencies = l.filter (d: d.name != packageName) (l.fromJSON (l.readFile dependenciesFile));
+  dependencyTree = l.listToAttrs (
+    (l.flip map) dependencies
+      (dep: l.nameValuePair dep.name dependencies));
 in {
 
   imports = [
@@ -159,7 +175,7 @@ in {
 
     mach-nix.lib = {inherit extractPythonAttrs;};
 
-    mach-nix.drvs = l.flip l.mapAttrs all-dists-compat-patchelf (name: dist:
+    mach-nix.drvs = l.flip l.mapAttrs all-wheels-compat-patchelf (name: dist:
       drv-parts.lib.makeModule {
         packageFunc = dist;
         # TODO: if `overridePythonAttrs` is used here, the .dist output is missing
@@ -186,6 +202,9 @@ in {
         buildPythonPackage = config.deps.python.pkgs.buildPythonPackage;
         manylinuxPackages = nixpkgs.pythonManylinuxPackages.manylinux1;
         fetchPythonRequirements = nixpkgs.callPackage ../../../pkgs/fetchPythonRequirements {};
+
+        runCommand = nixpkgs.runCommand;
+        pip = nixpkgs.python3Packages.pip;
       }
     );
 
@@ -197,7 +216,7 @@ in {
       mach-nix.pythonSources = true;
     };
 
-    env = {
+    buildPythonPackage = {
       pipInstallFlags =
         ["--ignore-installed"]
         ++ (
@@ -210,6 +229,7 @@ in {
       doCheck = false;
       dontPatchELF = l.mkDefault true;
       dontStrip = l.mkDefault true;
+
 
       nativeBuildInputs = [
         config.deps.autoPatchelfHook
