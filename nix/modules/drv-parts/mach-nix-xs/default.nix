@@ -3,100 +3,17 @@
   l = lib // builtins;
   python = config.deps.python;
   cfg = config.mach-nix;
-
-  # For a given name, return the path containing the downloaded file
-  getFetchedDistPath = name: cfg.pythonSources.names + "/${name}";
-
-  # For a given name, return the dist output from nixpkgs.buildPythonPackage
-  getDistDir = name: dist: dist.dist;
-
-  # separate 2 types of downloaded files: sdist, wheel
-  # key: name; val: {version or "wheel"}
-  all-info = config.eval-cache.content.mach-nix.dists;
-  wheel-info = l.filterAttrs (name: ver: ver == "wheel") all-info;
-  sdist-info = l.filterAttrs (name: ver: ! wheel-info ? ${name}) all-info;
-
-  # get the paths of all downloaded wheels
-  wheel-dists-paths =
-    l.mapAttrs (name: ver: getFetchedDistPath name) wheel-info;
-
-  # Build sdist dependencies.
-  # Only build sdists which are not substituted via config.substitutions and which aren't the toplevel
-  # package.
-  sdists-to-build =
-    l.filterAttrs (name: ver: (! substitutions ? ${name}) && name != packageName) sdist-info;
-  built-wheels = l.flip l.mapAttrs sdists-to-build
-    (name: ver: mkWheelDist name ver (getFetchedDistPath name));
-  all-built-wheels = built-wheels // substitutions;
-
-  # patch all-dists to ensure build inputs are propagated for autopPatchelflHook
-  all-wheels-compat-patchelf = l.flip l.mapAttrs all-built-wheels (name: dist:
-    dist.overridePythonAttrs (old: {postFixup = "ln -s $out $dist/out";})
-  );
-
-  # Convert all-dists to drv-parts drvs.
-  # The conversion is done via config.drvs (see below).
-  overridden-built-wheels = l.flip l.mapAttrs config.mach-nix.drvs
-    (_: drv: drv.public);
-
-  # The final dists we want to install.
-  # A mix of:
-  #   - downloaded wheels
-  #   - downloaded sdists built into wheels (see above)
-  #   - substitutions from nixpkgs patched for compat with autoPatchelfHook
-  finalDistsPaths =
-    wheel-dists-paths // (l.mapAttrs getDistDir overridden-built-wheels);
-
   packageName = config.public.name;
 
-  unknownSubstitutions = l.attrNames
-    (l.removeAttrs cfg.substitutions (l.attrNames all-info));
-
-  # Validate Substitutions. Allow only names that we actually depend on.
-  substitutions =
-    if unknownSubstitutions == []
-    then cfg.substitutions
-    else throw ''
-      ${"\n"}The following substitutions for python derivation '${packageName}' will not have any effect. There are no dependencies with such names:
-        - ${lib.concatStringsSep "\n  - " unknownSubstitutions}
-    '';
-
-  manualSetupDeps =
-    lib.mapAttrs
-    (name: deps: map (dep: finalDistsPaths.${dep}) deps)
-    cfg.manualSetupDeps;
-
-  # Attributes we never want to copy from nixpkgs
-  excludedNixpkgsAttrs = l.genAttrs
-    [
-      "all"
-      "args"
-      "builder"
-      "name"
-      "pname"
-      "version"
-      "src"
-      "outputs"
-    ]
-    (name: null);
-
-  # Extracts derivation args from a nixpkgs python package.
-  extractPythonAttrs = pythonPackage: let
-    extractOverrideAttrs = overrideFunc:
-      (pythonPackage.${overrideFunc} (old: {passthru.old = old;}))
-      .old;
-    pythonAttrs = extractOverrideAttrs "overridePythonAttrs";
-    allAttrs = pythonAttrs;
-  in
-    l.filterAttrs (name: _: ! excludedNixpkgsAttrs ? ${name}) allAttrs;
+  # For a given name, return the path containing the downloaded file
+  getDistDir = name: "${cfg.pythonSources.names}/${name}";
 
   # (IFD) Get the dist file for a given name by looking inside (pythonSources)
-  distFile = name: let
-    distDir = "${cfg.pythonSources.names}/${name}";
+  getDistFile = name: let
+    distDir = getDistDir name;
+    distFile = l.head (l.attrNames (builtins.readDir distDir));
   in
-    "${distDir}/${l.head (l.attrNames (builtins.readDir distDir))}";
-
-  isWheel = l.hasSuffix ".whl";
+    "${distDir}/${distFile}";
 
   # Extract the version from a dist's file name
   getVersion = file: let
@@ -110,22 +27,71 @@
   in
     version;
 
-  # For each dist we need to recall:
+  # (IFD) For each dist we need to recall:
   #   - the type (wheel or sdist)
   #   - the version (only needed for sdist, so we can build a wheel)
   getDistInfo = name: let
-    file = distFile name;
+    file = getDistFile name;
   in
-    if isWheel file
+    if l.hasSuffix ".whl" file
     then "wheel"
     else getVersion file;
+
+  preparedWheels =
+    let
+      filterAttrs = l.flip l.filterAttrs;
+      mapAttrs = l.flip l.mapAttrs;
+      distInfos = config.eval-cache.content.mach-nix.dists;
+
+      # Validate Substitutions. Allow only names that we actually depend on.
+      unknownSubstitutions = l.attrNames (l.removeAttrs cfg.substitutions (l.attrNames distInfos));
+      substitutions =
+        if unknownSubstitutions == []
+        then cfg.substitutions
+        else throw ''
+              ${"\n"}The following substitutions for python derivation '${packageName}' will not have any effect. There are no dependencies with such names:
+              - ${lib.concatStringsSep "\n  - " unknownSubstitutions}
+        '';
+
+      # separate 2 types of downloaded files: sdist, wheel
+      # key: name; val: {version or "wheel"}
+      wheelInfos = filterAttrs distInfos (name: ver: ver == "wheel");
+      sdistInfos = filterAttrs distInfos (name: ver: ! wheelInfos ? ${name});
+
+      # get the paths of all downloaded wheels
+      downloadedWheels = mapAttrs wheelInfos (name: ver: getDistDir name);
+      # Only build sdists which are not substituted via config.substitutions and which aren't the toplevel
+      # package.
+      sdistsToBuild = filterAttrs sdistInfos (name: ver: (! substitutions ? ${name}) && name != packageName);
+      builtWheels = mapAttrs sdistsToBuild (name: ver: mkWheelDist name ver (getDistDir name));
+
+      wheelsToPatch = builtWheels // substitutions;
+
+      # patch wheels to ensure build inputs are propagated for autopPatchelfHook
+      # TODO: explain why this is necessary
+      patchedWheels = mapAttrs wheelsToPatch (name: dist: dist.overridePythonAttrs (old: {postFixup = "ln -s $out $dist/out";}));
+    in
+      { inherit patchedWheels downloadedWheels; };
+
+  # The final dists we want to install.
+  # A mix of:
+  #   - downloaded wheels
+  #   - downloaded sdists built into wheels (see above)
+  #   - substitutions from nixpkgs patched for compat with autoPatchelfHook
+  finalDistsPaths =
+    preparedWheels.downloadedWheels // (l.mapAttrs (_: drv: drv.public.dist) config.mach-nix.drvs);
+
 
   # build a wheel for a given sdist
   mkWheelDist = pname: version: distDir: let
     # re-use package attrs from nixpkgs
     # (treat nixpkgs as a source of community overrides)
     extractedAttrs = l.optionalAttrs (python.pkgs ? ${pname})
-      extractPythonAttrs python.pkgs.${pname};
+      config.attrs-from-nixpkgs.lib.extractPythonAttrs python.pkgs.${pname};
+    manualSetupDeps =
+      lib.mapAttrs
+        (name: deps: map (dep: finalDistsPaths.${dep}) deps)
+        cfg.manualSetupDeps;
   in
     python.pkgs.buildPythonPackage (
       # nixpkgs attrs
@@ -160,6 +126,18 @@
     (l.flip map) dependencies
       (dep: l.nameValuePair dep.name dep.dependencies));
 
+
+makeModuleFromDerivation = _name: drv:
+  drv-parts.lib.makeModule {
+    packageFunc = drv;
+    # TODO: if `overridePythonAttrs` is used here, the .dist output is missing
+    #   Maybe a bug in drv-parts?
+    overrideFuncName = "overrideAttrs";
+    modules = [
+      {deps = {inherit (config.deps) stdenv;};}
+    ];
+  };
+
 in {
 
   imports = [
@@ -167,24 +145,12 @@ in {
     ../buildPythonPackage
     ./interface.nix
     ../eval-cache
+    ../attrs-from-nixpkgs
   ];
 
   config = {
 
-    mach-nix.lib = {inherit extractPythonAttrs;};
-
-    mach-nix.drvs = l.flip l.mapAttrs all-wheels-compat-patchelf (name: dist:
-      drv-parts.lib.makeModule {
-        packageFunc = dist;
-        # TODO: if `overridePythonAttrs` is used here, the .dist output is missing
-        #   Maybe a bug in drv-parts?
-        overrideFuncName = "overrideAttrs";
-        modules = [
-          {deps = {inherit (config.deps) stdenv;};}
-        ];
-      }
-    );
-
+    mach-nix.drvs = l.mapAttrs makeModuleFromDerivation preparedWheels.patchedWheels;
     mach-nix.dists =
       l.mapAttrs
       (name: _: getDistInfo name)
