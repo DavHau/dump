@@ -2,8 +2,7 @@
   description = "Mono repo of DavHau";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-unstable";
-    nixpkgsStable.url = "nixpkgs/nixos-22.11";
+    nixpkgs.url = "nixpkgs/nixos-22.11";
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
