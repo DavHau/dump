@@ -58,9 +58,51 @@
       ''
     );
 
+    projectPrefix = "blog_project_";
+    fileNames = ["README.md" "Readme.md" "readme.md"];
+    getReadmeName = src: l.head (
+      l.filter (fn: l.pathExists (src + "/${fn}")) fileNames
+    );
+    getReadme = src: src + "/${getReadmeName src}";
+    projectInputs = l.flip l.filterAttrs inputs (name: _: l.hasPrefix "blog_" name);
+    projects = l.flip l.mapAttrs' projectInputs
+      (name: src:
+        l.nameValuePair (l.removePrefix projectPrefix name) (getReadme src));
+    makeHeader = name: ''
+      echo "
+      ---
+      title: "${name}"
+      date: $(date --iso-8601)
+      draft: false
+      ---
+      " \
+    '';
+    copyReadme = name: readme: ''
+      set -x
+      ${makeHeader name} > $out/${name}.md
+      cat ${readme} >> $out/${name}.md
+    '';
+    allReadmesScript = ''
+      mkdir $out
+      ${toString (l.mapAttrsToList copyReadme projects)}
+    '';
+    allReadmes = pkgs.runCommand "all-readmes" {} allReadmesScript;
+    update.type = "app";
+    update.program = toString (config.writers.writePureShellScript
+      (with pkgs; [
+        coreutils
+      ])
+      ''
+        set -x
+        cp ${allReadmes}/* blog/content/projects/
+        chmod +w -R blog/content/projects/
+      ''
+    );
+
   in {
     packages.blog = blog;
     devShells.blog = shell;
-    apps.deploy-blog = deploy;
+    apps.blog-deploy = deploy;
+    apps.blog-update = update;
   };
 }

@@ -14,6 +14,18 @@
     # hugo theme
     hugo-theme.url = "github:luizdepra/hugo-coder";
     hugo-theme.flake = false;
+
+    # pull readmes for the project section of the blog
+    blog_project_dream2nix.url = "github:nix-community/dream2nix";
+    blog_project_dream2nix.flake = false;
+    blog_project_nix-portable.url = "github:davhau/nix-portable";
+    blog_project_nix-portable.flake = false;
+    blog_project_mach-nix.url = "github:davhau/mach-nix";
+    blog_project_mach-nix.flake = false;
+    blog_project_drv-parts.url = "github:davhau/drv-parts";
+    blog_project_drv-parts.flake = false;
+    blog_project_systemd2nix.url = "github:davhau/systemd2nix";
+    blog_project_systemd2nix.flake = false;
   };
 
   outputs = inputs@{ flake-parts, ... }:

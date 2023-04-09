@@ -1,5 +1,85 @@
 {
   "nodes": {
+    "blog_project_dream2nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1680605243,
+        "narHash": "sha256-dUrxj653kcLvjNKRI7NoTJoj+Q7G+vOYsl4iuwtnIWo=",
+        "owner": "nix-community",
+        "repo": "dream2nix",
+        "rev": "34a80ab215f1f24068ea9c76f3a7e5bc19478653",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "dream2nix",
+        "type": "github"
+      }
+    },
+    "blog_project_drv-parts": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1680698112,
+        "narHash": "sha256-FgnobN/DvCjEsc0UAZEAdPLkL4IZi2ZMnu2K2bUaElc=",
+        "owner": "davhau",
+        "repo": "drv-parts",
+        "rev": "e8c2ec1157dc1edb002989669a0dbd935f430201",
+        "type": "github"
+      },
+      "original": {
+        "owner": "davhau",
+        "repo": "drv-parts",
+        "type": "github"
+      }
+    },
+    "blog_project_mach-nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1679842714,
+        "narHash": "sha256-f/9d0I/ummFH5xjI097hUjkIYsZYgZt52fh9Z8zEp58=",
+        "owner": "davhau",
+        "repo": "mach-nix",
+        "rev": "ea9605fdcdd7ebc52b01c66dd54db8ac9148741a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "davhau",
+        "repo": "mach-nix",
+        "type": "github"
+      }
+    },
+    "blog_project_nix-portable": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1680526461,
+        "narHash": "sha256-ZJnr1+pNbLSLuVm9lPKnuueGc6ob9nL8cLB33k2bdWw=",
+        "owner": "davhau",
+        "repo": "nix-portable",
+        "rev": "4c0ff3d8d103905174308d07f1905f1467669ae2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "davhau",
+        "repo": "nix-portable",
+        "type": "github"
+      }
+    },
+    "blog_project_systemd2nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1604066174,
+        "narHash": "sha256-qLCWubreOHQpatheBbtbQIouOPcAvmnvmK0TLfq0CZ8=",
+        "owner": "davhau",
+        "repo": "systemd2nix",
+        "rev": "3359b37e05af8a233a21db60f9ce34dbd0495499",
+        "type": "github"
+      },
+      "original": {
+        "owner": "davhau",
+        "repo": "systemd2nix",
+        "type": "github"
+      }
+    },
     "drv-parts": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -124,6 +204,11 @@
     },
     "root": {
       "inputs": {
+        "blog_project_dream2nix": "blog_project_dream2nix",
+        "blog_project_drv-parts": "blog_project_drv-parts",
+        "blog_project_mach-nix": "blog_project_mach-nix",
+        "blog_project_nix-portable": "blog_project_nix-portable",
+        "blog_project_systemd2nix": "blog_project_systemd2nix",
         "drv-parts": "drv-parts",
         "flake-compat": "flake-compat_2",
         "flake-parts": "flake-parts",
