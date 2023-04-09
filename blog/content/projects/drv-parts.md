@@ -1,14 +1,32 @@
+
 ---
-title: "drv-parts"
-date: 2023-02-22T18:44:15+07:00
+title: drv-parts
+date: 2023-04-09
 draft: false
 ---
 
+# drv-parts
 
-# [drv-parts](https://github.com/DavHau/drv-parts)
+This is experimental, use with care!
 
-`drv-parts` replaces **`callPackage`**, **`override`**, **`overrideAttrs`**, **`...`** as a mechanism for configuring packages.  
-It makes package configuration feel like nixos system configuration.
+`drv-parts` replaces `callPackage`, `override`, `overrideAttrs`, `...` as a mechanism for configuring packages.
+It makes package configuration feel similar to NixOS system configuration.
+
+This is an implementation of ideas first drafted at [DavHau/pkgs-modules](https://github.com/DavHau/pkgs-modules).
+
+It is recommended to use `drv-parts` through [flake-parts](https://flake.parts) (see [examples/flake-parts](/examples/flake-parts)).
+
+There is also support for flake-less usage (see [examples/no-flake](/examples/no-flake)).
+
+# Funding by NLNet
+
+drv-parts was funded as part of the [dream2nix](https://github.com/nix-community/dream2nix) project through the [NGI Assure](https://nlnet.nl/assure) Fund, a fund established by [NLnet](https://nlnet.nl/) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu/) programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 957073. **Applications are still open, you can [apply today](https://nlnet.nl/propose)**.
+
+# Why Modules?
+
+Declaring derivations as modules solves a number of issues.
+For more details on the problems, visit [DavHau/pkgs-modules](https://github.com/DavHau/pkgs-modules).
+Also I recommend watching @edolstra 's [talk about this topic](https://www.youtube.com/watch?v=dTd499Y31ig).
 
 # Benefits
 
@@ -35,8 +53,8 @@ Changing options of packages in nixpkgs can require chaining different override 
 {
   htop-mod = {
     imports = [./htop.nix];
-    pname = lib.mkForce "htop-mod";
-    sensorsSupport = false;
+    name = lib.mkForce "htop-mod";
+    flags.sensorsSupport = false;
   };
 }
 ```
