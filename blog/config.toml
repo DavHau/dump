@@ -57,3 +57,7 @@ theme = "theme"
   name = "Projects"
   weight = 1
   url  = "projects/"
+[[menu.main]]
+  name = "Brain Dumps"
+  weight = 2
+  url  = "brain-dumps/"
