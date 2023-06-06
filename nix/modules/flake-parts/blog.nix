@@ -40,7 +40,7 @@
         git checkout gh-pages
         rsync -r ${blog}/ .
         chmod +w -R .
-        git add .
+        git add $(git rev-parse --show-toplevel)
         git commit -m "deploy blog - $(date --rfc-3339=seconds)" || :
         git push
         git checkout "$branchOrig"
