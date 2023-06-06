@@ -13,24 +13,13 @@
         ${pkgs.hugo}/bin/hugo --themesDir ${themesDir} "$@"
       '';
 
-    hugo = "${hugoPkg}/bin/hugo";
-
-    blog = pkgs.runCommandNoCC "blog" {} ''
-      mkdir $out
-      cd $out
-      cp -r ${self + /blog}/* .
-      chmod +w -R .
-
-      ${hugo}
-    '';
-
     shell = pkgs.mkShell {
       packages = [
         hugoPkg
       ];
     };
 
-    website = pkgs.runCommand "website" {} ''
+    blog = pkgs.runCommand "blog" {} ''
       cp -r ${self}/blog/* .
       chmod -R +w .
       ${hugoPkg}/bin/hugo
@@ -49,7 +38,7 @@
         set -x
         branchOrig=$(git branch --show-current)
         git checkout gh-pages
-        rsync -r ${website}/ .
+        rsync -r ${blog}/ .
         chmod +w -R .
         git add .
         git commit -m "deploy blog - $(date --rfc-3339=seconds)" || :
