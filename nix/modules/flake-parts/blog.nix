@@ -36,18 +36,14 @@
       ])
       ''
         set -x
-        branchOrig=$(git branch --show-current)
-        cd $(git rev-parse --show-toplevel)
-        git checkout gh-pages
-        rm -rf .*
-        git checkout main .gitignore
+        cd $TMPDIR
+        git clone --depth 1 git@github.com:davhau/davhau.github.io
+        rm -rf $(ls .)
         rsync -r ${blog}/ .
         chmod +w -R .
         git add .
-        cd -
         git commit -m "deploy blog - $(date --rfc-3339=seconds)" || :
         git push
-        git checkout "$branchOrig"
       ''
     );
 
