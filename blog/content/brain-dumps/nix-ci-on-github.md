@@ -93,25 +93,37 @@ Contributes to goals:
 
 (b) Small units of work make it simpler to debug a failure. Small units allow to narrow down a problem to a smaller amount of code that is responsible for it. It's much simpler to debug a .yml consisting of 60 lines of code, compared to a yml. consisting of 600 lines of code.
 
-(c) Small units of work make it simpler to onboard new contributors. If code is organized in large chunks, it requires investing mental capacity to understand what units it actually contains of and how those are related to each other. Especially for new contributors it is better to find these units already separated from the start.
+(c) Small units of work make it simpler to onboard new contributors. If code is organized in large chunks, it requires investing mental capacity to understand what units it actually contains and how those are related to each other. Especially for new contributors it is better to find these units already separated from the start.
 
 Heads UP:
 
 - While the DRY pattern is generally a good idea, it can often get in the way of decoupling things into smaller units. Sometimes duplication is necessary in order to decouple things and that's OK.
 - Smaller units might increase the total number of code lines in the CI, as previously shared code might need to be duplicated.
 - There is a cost of initializing workflow runs, which in summary is increased by introducing more workflows, for example the time to install nix on github hosted runners etc.
-- While this change can improve performance, it doesn't necessarily have to. Reducing the mental capacity for maintenance can often we worth more then a few seconds of runtime.
+- While this change can improve performance, it doesn't necessarily have to. Reducing the mental capacity for maintenance can often be worth more then a few seconds of runtime.
 - Be careful with dependencies between work units. Often work units depend on each other and must run in a certain order. In this case, splitting them apart might not make sense.
 
 ### 3. Wrap all jobs with `nix run` or `nix build`
 
 All CI jobs should be wrapped by `nix run` or `nix build`. This makes it simple to reproduce them locally and execute them in the CI pipeline without any extra glue code.
 
-Programs executed via `nix run` should at least be wrapped with a static `PATH` as done by `nix/modules/writers.nix`.
+Programs executed via `nix run` should at least be wrapped with a static `PATH`, for example by using `writers.writeBash`.
+
+Example:
+```nix
+pkgs.writers.writeBash "my-ci-job" {
+  makeWrapperArgs = ["--set" "PATH" "${lib.makeBinPath [
+    pkgs.hello
+  ]}"]
+} ''
+echo my-ci-job
+hello
+''
+```
 
 This ensures reasonable reproducibility and allows developers to reproduce failures seen in the CI pipeline locally with ease.
 
-A typical example of that is the BSD utilities on macOS that don't take the same command-line flags as the GNU coreutils.
+A typical example of where this matters is the BSD utilities on macOS that don't take the same command-line flags as the GNU coreutils.
 
 Contributes to Goals:
 

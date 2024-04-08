@@ -37,9 +37,11 @@
       ''
         set -x
         cd $TMPDIR
-        git clone --depth 1 git@github.com:davhau/davhau.github.io
+        git clone --depth 1 git@github.com:davhau/davhau.github.io ./blog
+        cd ./blog
         rm -rf $(ls .)
         rsync -r ${blog}/ .
+        git checkout gh-pages LICENSE CNAME
         chmod +w -R .
         git add .
         git commit -m "deploy blog - $(date --rfc-3339=seconds)" || :

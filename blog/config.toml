@@ -61,3 +61,7 @@ theme = "theme"
   name = "Brain Dumps"
   weight = 2
   url  = "brain-dumps/"
+[[menu.main]]
+  name = "Nix Tricks"
+  weight = 3
+  url  = "nix-tricks/"
