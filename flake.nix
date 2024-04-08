@@ -7,9 +7,6 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    drv-parts.url = "github:DavHau/drv-parts";
-    drv-parts.inputs.nixpkgs.follows = "nixpkgs";
-    drv-parts.inputs.flake-parts.follows = "flake-parts";
 
     # hugo theme
     hugo-theme.url = "github:luizdepra/hugo-coder";
